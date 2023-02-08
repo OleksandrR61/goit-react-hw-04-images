@@ -8,10 +8,10 @@ const pixabayFetch = axios.create({
     baseURL: 'https://pixabay.com/api/',
 });
 
-export const getImages = async ({page, search}) => {
+export const getImages = async ({page, query}) => {
     const params = {
         key: API_KEY,
-        q: search,
+        q: query,
         page,
         image_type: "photo",
         orientation: "horizontal",

@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-// import { Searchbar, ImageGallery, Button, Loader, Modal } from 'components';
-import { Searchbar } from 'components';
+import { Searchbar, ImageGallery, Button, Loader } from 'components';
 import { getImages, api_per_page } from '../../services/fetch';
 
 import styles from './ImageFinder.module.css';
@@ -14,106 +13,54 @@ export const ImageFinder = () => {
     const [page, setPage] = useState(1);
     const [totalPage, setTotalPage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
-
-    // componentDidUpdate(_, prevState) {
-    //     if (prevState.images.length !== this.state.images.length && document.querySelectorAll('img').length > 0) {
-    //         document.querySelectorAll('img')[12 * (this.state.page - 1)].scrollIntoView();
-    //         window.scrollBy(0, -76);
-    //     };
-    // }
+    const [isFirstRender, setIsFirstrender] = useState(true);
 
     useEffect(() => {
-        handleFetch();
+        if (isFirstRender) {
+            return;
+        };
 
-        document.querySelectorAll('img')[12 * (this.state.page - 1)].scrollIntoView();
-        window.scrollBy(0, -76);
-    }, [page, query, handleFetch]);
-
-    const handleFetch = async () => {
-        console.log("Rerender");
         setIsLoading(true);
 
-        try {
-            const {data: {hits, total, totalHits}} = await getImages({query, page});
-
-            if (total === 0) {
-                Notify.failure("Nothing found for your request");
-            };
-
-            setImages([...images, ...hits]);
-            setTotalPage(totalHits > 0 ? Math.ceil(totalHits / api_per_page) : 1);
-        } catch {
-            Notify.failure(`error.message`);
-        }
+        getImages({query, page}).then(({data: {hits, total, totalHits}}) => {
+            setImages((prev) => page > 1 ? [...prev, ...hits] : [...hits]);
+            setTotalPage(() => totalHits > 0 ? Math.ceil(totalHits / api_per_page) : 1);
+        }).catch((error) => {Notify.failure(`error.message`);});
 
         setIsLoading(false);
-    }
+    }, [page, query, isFirstRender]);
 
     const handleSearch = (string) => {
         setQuery(string);
         setPage(1);
+        if (isFirstRender) {
+            setIsFirstrender(false);
+        };
     };
 
-    // handleLoadMore = (event) => {
-    //     this.handleSetState({page: this.state.page + 1});
+    const handleLoadMore = (event) => {
+        setPage(prev => prev + 1);
 
-    //     event.target.blur();
-    // };
+        event.target.blur();
+    };
 
-    // handleModalOpen = (image) => {
-    //     this.setState({
-    //         imageModal: image,
-    //         status: STATE_STATUS.modal,
-    //     });
-    // };
-
-    // handleModalClose = () => {
-    //     this.setState({
-    //         status: STATE_STATUS.ready,
-    //     });
-    // };
-
-    // const handleFetch = async ({query = query, page = 1}) => {
-    //     setIsLoading(true);
-
-    //     try {
-    //         const {data: {hits, total, totalHits}} = await getImages({query, page});
-            
-    //         if (total === 0) {
-    //             Notify.failure("Nothing found for your request");
-    //         }
-
-    //         const arrayImages = page === 1 ? [] : [...images]
-
-    //         setImages([...images, ...hits]);
-    //         setQuery()
-            
-    //         this.setState({
-    //             images: [...arrayImages, ...hits],
-    //             search,
-    //             page,
-    //             totalPage: totalHits > 0 ? Math.ceil(totalHits / api_per_page) : 1,
-    //         });
-    //     }
-    //     catch(error){
-    //         Notify.failure(`error.message`);
-    //     }
-
-    //     this.setState({
-    //         status: STATE_STATUS.ready,
-    //     });
+    // if (document.querySelectorAll('img').length > 0) {
+    //     console.log(document.querySelectorAll('img').length);
+    //     document.querySelectorAll('img')[12 * (page - 1)].scrollIntoView();
+    //     window.scrollBy(0, -76);
     // }
+    if (page > 1) {window.scrollBy(0, 1380);}
 
     return (
         <div className={styles.ImageFinder}>
             <Searchbar onSearch={handleSearch} />
 
-            {/* {!isLoading && images.length > 0 &&
-                <ImageGallery images={images} onClick={this.handleModalOpen}/>} */}
+            {!isLoading && images.length > 0 &&
+                <ImageGallery images={images} />}
 
-            {/* {page !== totalPage && <Button onClick={this.handleLoadMore}/>} */}
+            {page !== totalPage && <Button onClick={handleLoadMore}/>}
 
-            {/* {isLoading && <Loader />} */}
+            {isLoading && <Loader />}
         </div>
     );
 };
