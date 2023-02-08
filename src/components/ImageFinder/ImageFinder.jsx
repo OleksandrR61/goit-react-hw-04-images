@@ -41,6 +41,7 @@ export const ImageFinder = () => {
     const handleSearch = (string) => {
         setQuery(string);
         setPage(1);
+        
         if (isFirstRender) {
             setIsFirstrender(false);
         };
