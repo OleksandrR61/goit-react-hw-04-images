@@ -25,10 +25,18 @@ export const ImageFinder = () => {
         getImages({query, page}).then(({data: {hits, total, totalHits}}) => {
             setImages((prev) => page > 1 ? [...prev, ...hits] : [...hits]);
             setTotalPage(() => totalHits > 0 ? Math.ceil(totalHits / api_per_page) : 1);
-        }).catch((error) => {Notify.failure(`error.message`);});
-
-        setIsLoading(false);
+        }).catch((error) => {
+            Notify.failure(`error.message`);
+        }).finally(() => {
+            setTimeout(() => {setIsLoading(false)}, 250);
+        });        
     }, [page, query, isFirstRender]);
+
+    useEffect(() => {
+        if(!isLoading && page !== 1) {
+            window.scroll(0, (page - 1) * 1088);
+        };
+    });
 
     const handleSearch = (string) => {
         setQuery(string);
@@ -43,14 +51,7 @@ export const ImageFinder = () => {
 
         event.target.blur();
     };
-
-    // if (document.querySelectorAll('img').length > 0) {
-    //     console.log(document.querySelectorAll('img').length);
-    //     document.querySelectorAll('img')[12 * (page - 1)].scrollIntoView();
-    //     window.scrollBy(0, -76);
-    // }
-    if (page > 1) {window.scrollBy(0, 1380);}
-
+    
     return (
         <div className={styles.ImageFinder}>
             <Searchbar onSearch={handleSearch} />
@@ -58,7 +59,7 @@ export const ImageFinder = () => {
             {!isLoading && images.length > 0 &&
                 <ImageGallery images={images} />}
 
-            {page !== totalPage && <Button onClick={handleLoadMore}/>}
+            {!isLoading && page !== totalPage && <Button onClick={handleLoadMore}/>}
 
             {isLoading && <Loader />}
         </div>
